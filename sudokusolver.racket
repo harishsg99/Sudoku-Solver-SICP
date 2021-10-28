@@ -1,0 +1,32 @@
+(define (SolveSudoku sentboard)
+
+  (define (subgrid brd r c)                     ; subfn to get subgrid:
+    (define L '((0 1 2)(3 4 5)(6 7 8)))
+    (define-values (rr cc)
+      (values (flatten(filter (λ(x)(member r x)) L))   ; get the row set
+              (flatten(filter (λ(x)(member c x)) L)))) ; get the column set
+    (for*/list ((i rr)(j cc))          ; get list of numbers in these rows & columns
+      (list-ref (list-ref brd i) j)))
+
+  ; start with sentboard and first row and column: 
+  (let loop ((bd sentboard) (r 0) (c 0))
+    (let ((next (λ (nextbd)                     ; subfn to go to next column/row:
+                  (cond [(< c 8)  (loop nextbd r (add1 c) )]
+                        [(< r 8)  (loop nextbd (add1 r) 0 )]
+                        [else (displayln "SOLUTION:")
+                              (for ((rowline nextbd)) 
+                                (println rowline))
+                              ;(exit) can be added here to stop at first solution.
+                              ]))))
+      (if (= 0 
+             (list-ref (list-ref bd r) c))     ; cell value: if 0, try numbers 1-9:  
+          (begin (for ((i (range 1 10)))
+                   (when(not(or    ; number should not be in row/column/subgrid:
+                             (member i (list-ref bd r))               ; row
+                             (member i (map (λ(x)(list-ref x c)) bd)) ; column
+                             (member i (subgrid bd r c))))            ; subgrid
+                     (define newbd              ; put number i at this site:
+                       (list-set bd r
+                                 (list-set (list-ref bd r) c i)))
+                     (next newbd)))) 
+          (next bd)))))
